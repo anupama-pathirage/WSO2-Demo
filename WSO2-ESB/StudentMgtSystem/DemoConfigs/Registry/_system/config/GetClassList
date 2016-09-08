@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="conf:GetClassList">
+   <log level="custom">
+      <property name="GetClassList" value="Received at GetClassList SEQ"/>
+   </log>
+   <sequence key="conf:/GetClassList1"/>
+   <log level="custom">
+      <property name="GetClassList" value="Received From GetClassList1"/>
+   </log>
+   <property name="responseList1"
+             expression="$body"
+             scope="default"
+             type="OM"/>
+   <sequence key="conf:/GetClassList2"/>
+   <log level="custom">
+      <property name="GetClassList" value="Received From GetClassList2"/>
+   </log>
+   <enrich>
+      <source xmlns:nm="http://ws.wso2.org/dataservice"
+              clone="true"
+              type="custom"
+              xpath="$ctx:responseList1//nm:Classes"/>
+      <target xmlns:nm1="http://students.demo.org"
+              xmlns:nm2="http://ws.wso2.org/dataservice"
+              action="child"
+              type="custom"
+              xpath="//nm1:getClassesForStudentResponse/nm1:return/nm2:StudentData/ClassData"/>
+   </enrich>
+   <enrich>
+      <source clone="false" type="inline">
+         <GradeBook xmlns=""/>
+      </source>
+      <target xmlns:nm1="http://students.demo.org"
+              xmlns:nm2="http://ws.wso2.org/dataservice"
+              action="child"
+              type="custom"
+              xpath="//nm1:getClassesForStudentResponse/nm1:return/nm2:StudentData"/>
+   </enrich>
+   <enrich>
+      <source clone="true" type="property" property="gradebook"/>
+      <target action="replace" type="custom" xpath="//GradeBook"/>
+   </enrich>
+   <enrich>
+      <source clone="false" type="inline">
+         <Validity xmlns=""/>
+      </source>
+      <target xmlns:nm1="http://students.demo.org"
+              xmlns:nm2="http://ws.wso2.org/dataservice"
+              action="child"
+              type="custom"
+              xpath="//nm1:getClassesForStudentResponse/nm1:return/nm2:StudentData"/>
+   </enrich>
+   <enrich>
+      <source clone="true" type="property" property="validity"/>
+      <target action="replace" type="custom" xpath="//Validity"/>
+   </enrich>
+   <xslt key="conf:/repository/demo/transforms/transform.xsl"/>
+   <respond/>
+</sequence>

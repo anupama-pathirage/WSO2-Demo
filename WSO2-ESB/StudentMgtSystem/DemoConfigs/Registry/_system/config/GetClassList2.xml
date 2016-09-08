@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="conf:GetClassList2">
+   <log level="custom">
+      <property name="GetClassList2" value="Received at GetClassList2 SEQ"/>
+   </log>
+   <property name="EndPointList"
+             expression="get-property('registry','conf:/repository/demo/endpoints/EndPointsL2.xml')"
+             scope="default"
+             type="OM"/>
+   <iterate xmlns:nm="http://endpoints"
+            expression="$ctx:EndPointList//nm:EP"
+            id="ITR_AGG">
+      <target>
+         <sequence>
+            <property name="EndPointId"
+                      expression="//nm:EP"
+                      scope="default"
+                      type="STRING"/>
+            <property name="endPointName"
+                      expression="fn:concat('conf:/repository/demo/endpoints/EP/',get-property('EndPointId'),'.xml')"
+                      scope="default"
+                      type="STRING"/>
+            <log level="custom">
+               <property name="EP:" expression="$ctx:endPointName"/>
+            </log>
+            <header name="Action" value="urn:mediate"/>
+            <payloadFactory media-type="xml">
+               <format>
+                  <nm:getClassesForStudent xmlns:nm="http://students.demo.org">
+                     <nm:studentID>$1</nm:studentID>
+                  </nm:getClassesForStudent>
+               </format>
+               <args>
+                  <arg expression="$ctx:studentID" evaluator="xml"/>
+               </args>
+            </payloadFactory>
+            <call>
+               <endpoint key-expression="get-property('endPointName')"/>
+            </call>
+         </sequence>
+      </target>
+   </iterate>
+   <aggregate id="ITR_AGG">
+      <completeCondition>
+         <messageCount min="-1" max="-1"/>
+      </completeCondition>
+      <onComplete xmlns:nm="http://students.demo.org"
+                  expression="//nm:getClassesForStudentResponse">
+         <log level="full" separator=","/>
+      </onComplete>
+   </aggregate>
+</sequence>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proxy xmlns="http://ws.apache.org/ns/synapse"
+       name="StudentMgtService"
+       startOnLoad="true"
+       statistics="disable"
+       trace="disable"
+       transports="https,http">
+   <target>
+      <inSequence>
+         <property xmlns:nm="http://www.studentportal.org"
+                   expression="//nm:authenticateWithClassList/nm:studentID/text()"
+                   name="studentID"
+                   scope="default"
+                   type="STRING"/>
+         <property xmlns:nm="http://www.studentportal.org"
+                   expression="//nm:authenticateWithClassList/nm:password/text()"
+                   name="password"
+                   scope="default"
+                   type="STRING"/>
+         <log>
+            <property expression="$ctx:studentID" name="Student ID"/>
+         </log>
+         <payloadFactory media-type="xml">
+            <format>
+               <auth:authenticate xmlns:auth="http://auth.demo.org">
+                  <auth:studentID>$1</auth:studentID>
+                  <auth:password>$2</auth:password>
+               </auth:authenticate>
+            </format>
+            <args>
+               <arg evaluator="xml" expression="$ctx:studentID"/>
+               <arg evaluator="xml" expression="$ctx:password"/>
+            </args>
+         </payloadFactory>
+         <send receive="conf:/Authenticate">
+            <endpoint key="conf:/repository/demo/endpoints/EP/AuthEP.xml"/>
+         </send>
+      </inSequence>
+   </target>
+   <description/>
+</proxy>

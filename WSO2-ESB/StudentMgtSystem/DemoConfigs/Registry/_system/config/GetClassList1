@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="conf:GetClassList1">
+   <log level="custom">
+      <property name="GetClassList1" value="Received at GetClassList1 SEQ"/>
+   </log>
+   <property xmlns:ns="http://org.apache.synapse/xsd"
+             name="EndPointList"
+             expression="get-property('registry','conf:/repository/demo/endpoints/EndPointsL1.xml')"
+             scope="default"
+             type="OM"/>
+   <iterate xmlns:ns="http://org.apache.synapse/xsd"
+            xmlns:nm="http://endpoints"
+            expression="$ctx:EndPointList//nm:EP"
+            id="ITR_AGG">
+      <target>
+         <sequence>
+            <property name="EndPointId"
+                      expression="//nm:EP"
+                      scope="default"
+                      type="STRING"/>
+            <property name="endPointName"
+                      expression="fn:concat('conf:/repository/demo/endpoints/EP/',get-property('EndPointId'),'.xml')"
+                      scope="default"
+                      type="STRING"/>
+            <log level="custom">
+               <property name="EP:" expression="$ctx:endPointName"/>
+            </log>
+            <header name="Action" value="urn:getClassesForStudent"/>
+            <payloadFactory media-type="xml">
+               <format>
+                  <nm:getClassesForStudent xmlns:nm="http://ws.wso2.org/dataservice">
+                     <nm:studentID>$1</nm:studentID>
+                  </nm:getClassesForStudent>
+               </format>
+               <args>
+                  <arg expression="$ctx:studentID" evaluator="xml"/>
+               </args>
+            </payloadFactory>
+            <call>
+               <endpoint key-expression="get-property('endPointName')"/>
+            </call>
+         </sequence>
+      </target>
+   </iterate>
+   <aggregate id="ITR_AGG">
+      <completeCondition>
+         <messageCount min="-1" max="-1"/>
+      </completeCondition>
+      <onComplete xmlns:ns="http://org.apache.synapse/xsd"
+                  xmlns:nm="http://ws.wso2.org/dataservice"
+                  expression="//nm:StudentClasses/nm:Classes">
+         <log level="full" separator=","/>
+      </onComplete>
+   </aggregate>
+   <payloadFactory media-type="xml">
+      <format>
+         <StudentClasses xmlns="" xmlns:man="http://ws.wso2.org/dataservice">$1</StudentClasses>
+      </format>
+      <args>
+         <arg xmlns:ns="http://org.apache.synapse/xsd"
+              xmlns:nm="http://ws.wso2.org/dataservice"
+              expression="//nm:Classes"
+              evaluator="xml"/>
+      </args>
+   </payloadFactory>
+</sequence>

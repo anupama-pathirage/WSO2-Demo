@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="conf:Authenticate">
+   <log level="custom">
+      <property name="Authenticate" value="Received at Authenticate SEQ"/>
+   </log>
+   <property xmlns:ns="http://org.apache.synapse/xsd"
+             xmlns:nm="http://auth.demo.org"
+             name="validity"
+             expression="//nm:authenticateResponse/nm:return/userInfo/validity/text()"
+             scope="default"
+             type="STRING"/>
+   <property xmlns:ns="http://org.apache.synapse/xsd"
+             xmlns:nm="http://auth.demo.org"
+             name="gradebook"
+             expression="//nm:authenticateResponse/nm:return/userInfo/gradebook/text()"
+             scope="default"
+             type="STRING"/>
+   <log level="custom">
+      <property xmlns:ns="http://org.apache.synapse/xsd"
+                name="Student ID"
+                expression="$ctx:studentID"/>
+      <property xmlns:ns="http://org.apache.synapse/xsd"
+                name="Validity"
+                expression="$ctx:validity"/>
+      <property xmlns:ns="http://org.apache.synapse/xsd"
+                name="Grade Book"
+                expression="$ctx:gradebook"/>
+   </log>
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="$ctx:validity">
+      <case regex="true">
+         <log level="custom">
+            <property name="Authenticate" value="User Logged in successfully"/>
+         </log>
+         <sequence key="conf:/GetClassList"/>
+      </case>
+      <case regex="false">
+         <payloadFactory media-type="xml">
+            <format>
+               <StudentData>
+                  <StudentID>$1</StudentID>
+                  <Validity>$2</Validity>
+               </StudentData>
+            </format>
+            <args>
+               <arg expression="$ctx:studentID" evaluator="xml"/>
+               <arg expression="$ctx:validity" evaluator="xml"/>
+            </args>
+         </payloadFactory>
+         <respond/>
+      </case>
+   </switch>
+</sequence>

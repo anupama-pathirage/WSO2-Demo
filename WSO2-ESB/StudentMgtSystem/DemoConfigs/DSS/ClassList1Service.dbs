@@ -1,0 +1,23 @@
+<data name="ClassList1Service" transports="http https local">
+   <config enableOData="false" id="portaldb">
+      <property name="driverClassName">com.mysql.jdbc.Driver</property>
+      <property name="url">jdbc:mysql://localhost:3306/portaldemo</property>
+      <property name="username">root</property>
+      <property name="password">root</property>
+   </config>
+   <query id="queryStudents" useConfig="portaldb">
+      <sql>Select ClassID,ClassName,DATE_FORMAT(ClassStartDate,'%Y-%m-%dT%T') as ClassStartDate,ClassLink from StudentData where StudentID=?</sql>
+      <result element="StudentClasses" rowName="Classes">
+         <element column="ClassID" name="ClassID" xsdType="string"/>
+         <element column="ClassName" name="ClassName" xsdType="string"/>
+         <element column="ClassStartDate" name="ClassStartDate" xsdType="string"/>
+		 <element column="ClassLink" name="ClassLink" xsdType="string"/>
+      </result>
+      <param name="studentid" sqlType="STRING"/>
+   </query>
+   <operation name="getClassesForStudent">
+      <call-query href="queryStudents">
+         <with-param name="studentid" query-param="studentid"/>
+      </call-query>
+   </operation>
+</data>
